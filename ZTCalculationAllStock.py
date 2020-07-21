@@ -4,6 +4,9 @@ import numpy as np
 import csv
 import re, time
 import string
+import os.path
+import matplotlib.pyplot as plt
+
 
 ##queryDate = '20190102'
 queryDate = '20200408'
@@ -18,7 +21,7 @@ endDate   = '20191231'
 startDate = '20160101'
 endDate   = '20191231'
  
-STOCK_FILE = '000001.csv'   #平安银行，网格3%，2019年卖出64次
+STOCK_FILE = '300123.SZ.csv'   #平安银行，网格3%，2019年卖出64次
 
 
 
@@ -37,16 +40,7 @@ def roundf2(data):
 
 
 
-def extract_csv_data(row, _date,_o,_h,_l,_c,_v):
-    if row[1] == 'trade_date':
-        return
-    if row[1] < startDate or row[1] > endDate:
-        return
-    _date.append(row[1])
-    _o.append(float(row[2]))
-    _h.append(float(row[3]))
-    _l.append(float(row[4]))
-    _c.append(float(row[5]))
+
 
 
 ########STOCK_FILE = '601688.csv'   #华泰证券
@@ -54,35 +48,100 @@ def extract_csv_data(row, _date,_o,_h,_l,_c,_v):
 DATA_PATH = 'C:/python/csv/'
 DATA_PATH_NAME = DATA_PATH + STOCK_FILE
 
-def read_csv_file(_stock_name, _date,_open,_high,_low,_close,_volume):
-    _data_path_name = DATA_PATH+_stock_name+'.csv'
-    with open(_data_path_name,"r",encoding="utf-8") as csvfile:
+
+
+
+def extract_csv_data2(row, _date,_time,_o,_h,_c):
+    if row[2] == 'trade_time':
+        return
+##    if row[1] < startDate or row[1] > endDate:
+##        return
+##    print (row[2], row[3])
+##    _date.append(row[2])
+    _date.append(row[2][0:10])
+    _time.append(row[2][-8:])
+##    print (_time)
+    _o.append(float(row[3]))
+    _h.append(float(row[5]))
+    _c.append(float(row[4]))
+    
+def read_csv_file2(_freq, _date,_time,_open,_high,_close):
+    if _freq == 'MIN':
+        dir_path = 'C:/python/csv_min/'
+    elif _freq == 'D':
+        dir_path = 'C:/python/csv/'
+    elif _freq == 'W':
+        dir_path = 'C:/python/csv_wk/'
+    elif _freq == 'M':
+        dir_path = 'C:/python/csv_mon/'
+    DATA_PATH_NAME = dir_path + STOCK_FILE
+    print (DATA_PATH_NAME)
+    with open(DATA_PATH_NAME,"r",encoding="utf-8") as csvfile:
+    #读取csv文件，返回的是迭代类型
         reader = csv.reader(csvfile)
         for row in reader :
-            extract_csv_data(row, _date,_open,_high,_low,_close,_volume)
+            extract_csv_data2(row, _date,_time,_open,_high,_close)
+##            print (_date, _open)
 
-
+            
 
 stock_cnt = 0
 high_cnt = 0
 close_cnt = 0
 
-def ZT_strategy(_stock_name, _search_date):  
+
+def calculateHighestPrice(price):
+    highestPrice = round(float(price) * 1.100, 2)
+##    print(f'price={price}, highestPrice={highestPrice}')
+    return highestPrice
+
+g_profitFileName = 'C:/python/zhangting/profit.csv'
+g_dirProfit = {}
+#('000020.SZ', '2020-01-01', 9.5)
+def saveParaToCsv(ts_code, date, profit):
+    isFileExist = os.path.isfile(g_profitFileName)
+    with open(g_profitFileName, 'a', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        if False == isFileExist:
+            writer.writerow(['ts_code', 'date', 'profit'])
+        writer.writerow([ts_code, date, profit])
+
+def ZT_strategy2(_stock_name):  
     global stock_cnt
-    _date=[];_open=[];_high=[];_low=[];_close=[];_volume=[];  #define data
-    read_csv_file(_stock_name,_date,_open,_high,_low,_close,_volume)
+    _freq = 'MIN' #分钟线 
+    _date=[];_time=[];_open=[];_high=[];_low=[];_close=[];_volume=[];  #define data
 
+##    read_csv_file(_stock_name,_date,_open,_high,_low,_close,_volume)
 
+    read_csv_file2(_freq,_date,_time,_open,_high,_close)
+    ts_code = 0
+    date = 0
+    profit = 0
+    
     length = len(_close)
     if length== 0:
         return
-    
-    for i in range(2,length):
-        if _search_date == _date[i]:
-            if _high[i] / _close[i-1]>1.0997:
-                high_cnt = high_cnt+1
-            if _close[i] / _close[i-1]>1.0997:
-                close_cnt = close_cnt+1
+    print("lenth=", length)
+    idx=[];
+    for i in range(1,length):
+        if _time[i] == "15:00:00":
+            idx.append(i)
+##            print (_date[i], _close[i] )
+##            print (idx)
+            
+    length = len(idx)   
+    for j in range(2, length):
+        index = idx[j]
+        price = calculateHighestPrice(_close[idx[j-2]])
+        print ( _date[index],_time[index], _close[index], price, _close[idx[j-1]])
+        
+        if price == _close[idx[j-1]]:  ##涨停价
+            ts_code = "test"
+            date= _date[index]
+            profit = _close[index]/_close[idx[j-1]]-1
+            saveParaToCsv(ts_code,date,profit)
+        
+
 
 ##    print(_stock_name, high_cnt, close_cnt)
     
@@ -102,7 +161,7 @@ def ZT_calculate_all_stock():  #遍历所有A股的网格交易次数
 ##            if (float(row['pe']) >20):
 ##                continue
             stock_name = row['ts_code'][:6]
-            ZT_strategy(stock_name, search_date)
+            ZT_strategy2(stock_name, search_date)
     print(search_date, high_cnt, close_cnt)
     print('完成遍历所有股票')
 
@@ -111,9 +170,9 @@ def ZT_calculate_all_stock():  #遍历所有A股的网格交易次数
 
 def main():
     
-    ZT_calculate_all_stock()
-    
-
+##    ZT_calculate_all_stock()
+##    stock_name = 000001.SZ.csv"
+    ZT_strategy2(STOCK_FILE)
 
 if __name__ == '__main__':
     print('开始请求数据')
