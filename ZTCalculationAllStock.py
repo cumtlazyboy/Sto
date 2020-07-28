@@ -21,7 +21,7 @@ endDate   = '20191231'
 startDate = '20160101'
 endDate   = '20191231'
  
-STOCK_FILE = '300123.SZ.csv'   #平安银行，网格3%，2019年卖出64次
+STOCK_FILE = '300123.SZ.csv'   
 
 
 
@@ -65,29 +65,36 @@ def extract_csv_data2(row, _date,_time,_o,_h,_c):
     _h.append(float(row[5]))
     _c.append(float(row[4]))
     
-def read_csv_file2(_freq, _date,_time,_open,_high,_close):
-    if _freq == 'MIN':
-        dir_path = 'C:/python/csv_min/'
-    elif _freq == 'D':
-        dir_path = 'C:/python/csv/'
-    elif _freq == 'W':
-        dir_path = 'C:/python/csv_wk/'
-    elif _freq == 'M':
-        dir_path = 'C:/python/csv_mon/'
+def read_csv_file2(_stock_name, _freq, _date,_time,_open,_high,_close):
+##    if _freq == 'MIN':
+##        dir_path = 'C:/python/csv_min/'
+##    elif _freq == 'D':
+##        dir_path = 'C:/python/csv/'
+##    elif _freq == 'W':
+##        dir_path = 'C:/python/csv_wk/'
+##    elif _freq == 'M':
+##        dir_path = 'C:/python/csv_mon/'
+    STOCK_FILE = '0'
+    dir_path = 'C:/python/20200106to20200717/'
+    if _stock_name[:2] == '30'or _stock_name[:2] == '00':
+        STOCK_FILE = _stock_name+ '.SZ.csv'
+    elif _stock_name[:2] == '60':
+        STOCK_FILE = _stock_name+'.SH.csv'
+##    STOCK_FILE = '300123.SZ.csv'  
     DATA_PATH_NAME = dir_path + STOCK_FILE
     print (DATA_PATH_NAME)
-    with open(DATA_PATH_NAME,"r",encoding="utf-8") as csvfile:
-    #读取csv文件，返回的是迭代类型
-        reader = csv.reader(csvfile)
-        for row in reader :
-            extract_csv_data2(row, _date,_time,_open,_high,_close)
+    try:
+        with open(DATA_PATH_NAME,"r",encoding="utf-8") as csvfile:
+            #读取csv文件，返回的是迭代类型
+            reader = csv.reader(csvfile)
+            for row in reader :
+                extract_csv_data2(row, _date,_time,_open,_high,_close)
 ##            print (_date, _open)
 
             
-
-stock_cnt = 0
-high_cnt = 0
-close_cnt = 0
+    except Exception as e:
+        STOCK_FILE = '1'
+        print ('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
 
 def calculateHighestPrice(price):
@@ -112,8 +119,8 @@ def ZT_strategy2(_stock_name):
     _date=[];_time=[];_open=[];_high=[];_low=[];_close=[];_volume=[];  #define data
 
 ##    read_csv_file(_stock_name,_date,_open,_high,_low,_close,_volume)
-
-    read_csv_file2(_freq,_date,_time,_open,_high,_close)
+    print(_stock_name)
+    read_csv_file2(_stock_name, _freq,_date,_time,_open,_high,_close)
     ts_code = 0
     date = 0
     profit = 0
@@ -133,10 +140,11 @@ def ZT_strategy2(_stock_name):
     for j in range(2, length):
         index = idx[j]
         price = calculateHighestPrice(_close[idx[j-2]])
-        print ( _date[index],_time[index], _close[index], price, _close[idx[j-1]])
+##        print ( _date[index],_time[index], _close[index], price, _close[idx[j-1]])
         
         if price == _close[idx[j-1]]:  ##涨停价
-            ts_code = "test"
+            print ( _date[index],_time[index], _close[index], price, _close[idx[j-1]])
+            ts_code = _stock_name
             date= _date[index]
             profit = _close[index]/_close[idx[j-1]]-1
             saveParaToCsv(ts_code,date,profit)
@@ -149,20 +157,24 @@ def ZT_strategy2(_stock_name):
 
 def ZT_calculate_all_stock():  #遍历所有A股的网格交易次数
     print('开始遍历所有股票')
-    search_date = 20200505
+##    search_date = 20200505
     with open('C:/python/csv/oneDayAllStock.csv', 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
+            stock_name = row['ts_code'][:6]
+            ZT_strategy2(stock_name)
+##            print(stock_name)
+##            grid_uniform_strategy(stock_name)
 ##########################            print('1',row['ts_code'][:6],row['pe'])
 
-            if row['pe'] == '':
-                continue
-##            if (float(row['pe']) >20) or (row['pe'] ==''):
-##            if (float(row['pe']) >20):
+##            if row['pe'] == '':
 ##                continue
-            stock_name = row['ts_code'][:6]
-            ZT_strategy2(stock_name, search_date)
-    print(search_date, high_cnt, close_cnt)
+####            if (float(row['pe']) >20) or (row['pe'] ==''):
+####            if (float(row['pe']) >20):
+####                continue
+##            stock_name = row['ts_code'][:6]
+##            ZT_strategy2(stock_name, search_date)
+##    print(search_date, high_cnt, close_cnt)
     print('完成遍历所有股票')
 
     
@@ -172,7 +184,8 @@ def main():
     
 ##    ZT_calculate_all_stock()
 ##    stock_name = 000001.SZ.csv"
-    ZT_strategy2(STOCK_FILE)
+    ZT_calculate_all_stock()
+##    ZT_strategy2(STOCK_FILE)
 
 if __name__ == '__main__':
     print('开始请求数据')
