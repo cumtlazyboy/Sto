@@ -7,6 +7,15 @@ import string
 import os.path
 import matplotlib.pyplot as plt
 
+#画图显示
+import matplotlib.pyplot as plt
+from pylab import mpl #正常显示画图时出现的中文
+mpl.rcParams['font.sans-serif']=['SimHei'] #这里使用微软雅黑字体
+mpl.rcParams['axes.unicode_minus']=False #画图时显示负号
+
+g_dirProfit = {}
+
+
 
 ##queryDate = '20190102'
 queryDate = '20200408'
@@ -177,6 +186,47 @@ def ZT_calculate_all_stock():  #遍历所有A股的网格交易次数
 ##    print(search_date, high_cnt, close_cnt)
     print('完成遍历所有股票')
 
+
+
+
+
+def calculateProfit(fileName):
+    global g_dirProfit
+    g_dirProfit = {}
+    dirtCount = {}
+    with open(fileName, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            date = row['date']
+            value = row['profit']
+            if date not in g_dirProfit:
+                g_dirProfit[date] = float(value)
+                dirtCount[date] = 1
+            else:
+                g_dirProfit[date] = g_dirProfit[date] + float(value)
+                dirtCount[date] = dirtCount[date] + 1
+
+    g_dirProfit = dict(sorted(g_dirProfit.items(), key=lambda d: d[0], reverse=False))
+    for k in g_dirProfit:
+        g_dirProfit[k] = round(g_dirProfit[k] *100/ dirtCount[k], 4)
+    print(g_dirProfit)
+
+def drawProfitPic():
+    print(g_dirProfit)
+    totalProfit = 0
+    averageProfit = 0
+    x1 = list(g_dirProfit.keys())
+    y1 = list(g_dirProfit.values())
+    plt.plot(x1, y1, label='Frist line', linewidth=3, color='r', marker='o',
+             markerfacecolor='blue', markersize=12)
+    plt.xlabel('日期')
+    plt.ylabel('收益率')
+    for i in range(len(y1)):
+        totalProfit += y1[i]
+    averageProfit = round(totalProfit / len(y1), 2)
+    plt.title(str(len(y1)) + '天' + '平均收益率: ' + str(averageProfit))
+    plt.legend()
+    plt.show()
     
 ##ttm市盈率获取https://tushare.pro/document/2?doc_id=128
 
@@ -184,8 +234,14 @@ def main():
     
 ##    ZT_calculate_all_stock()
 ##    stock_name = 000001.SZ.csv"
-    ZT_calculate_all_stock()
+
 ##    ZT_strategy2(STOCK_FILE)
+
+
+    ##    ZT_calculate_all_stock()
+    calculateProfit('C:/python/zhangting/profit.csv')
+    drawProfitPic()
+
 
 if __name__ == '__main__':
     print('开始请求数据')
