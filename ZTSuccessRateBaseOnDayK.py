@@ -28,8 +28,8 @@ downloadEndDate   = '20200720'
 startDate = '20180101'
 endDate   = '20181231'
 ##
-startDate = '20190101'
-endDate   = '20201231'
+startDate = '20160101'
+endDate   = '20191231'
 
 
 def string_to_float(str):
@@ -107,6 +107,7 @@ def saveParaToCsv(ts_code, date, profit):
         g_delete_flag = False
         deleteCsvFile(g_profitFileName)
         time.sleep(5)
+    isFileExist = os.path.isfile(g_profitFileName)
     with open(g_profitFileName, 'a', encoding='utf-8') as f:
         writer = csv.writer(f)
         if False == isFileExist:
@@ -127,7 +128,7 @@ def ZT_success_rate(_stock_name):
     close_profit = 0  #以涨停次日收盘价计算收益
     ave_open_profit = 0  #以涨停次日开盘价计算的  平均收益
     ave_close_profit = 0  #以涨停次日收盘价计算的  平均收益
-    
+    stockName = 0
     global g_cnt
     _date=[];_open=[];_high=[];_low=[];_close=[];_volume=[];  #define data
     read_csv_file(_stock_name,_date,_open,_high,_low,_close,_volume)
@@ -160,13 +161,19 @@ def ZT_success_rate(_stock_name):
 ##############        elif ZTprice == _high[i] and ZTprice == _close[i]:
 ##############            ZTSuccessCnt = ZTSuccessCnt+1
 ################            print ('封板成功',_date[i])
-    if ZTFailCnt + ZTSuccessCnt>5:
-        if ZTSuccessCnt/(ZTFailCnt+ZTSuccessCnt) >0.7:
+    if ZTFailCnt + ZTSuccessCnt>3:
+        if ZTSuccessCnt/(ZTFailCnt+ZTSuccessCnt) >0.6:
             g_cnt= g_cnt +1
             ZT_rate = round(ZTSuccessCnt/(ZTFailCnt+ZTSuccessCnt),3)
-            saveParaToCsv(_stock_name+'.csv',ZT_rate,ave_close_profit)
-            print(_stock_name,'封板成功率=',round(ZTSuccessCnt/(ZTFailCnt+ZTSuccessCnt),3),'；触及涨停次数=',ZTFailCnt + ZTSuccessCnt, g_cnt,)
+            if _stock_name[0:2] == '00' or _stock_name[0:2] == '30':
+                stockName = _stock_name+'.SZ'
+            elif _stock_name[0:2] == '60':
+                stockName = _stock_name+'.SH'
+                print (stockName)
+            saveParaToCsv(stockName,ZT_rate,ave_close_profit)
+            print(_stock_name,'封板成功率=',ZT_rate,'；触及涨停次数=',ZTFailCnt + ZTSuccessCnt, g_cnt,)
             print(_stock_name,'                                          次日开盘平均收益%=',round(ave_open_profit*100/g_cnt, 2), '次日收盘平均收益%=',round(ave_close_profit*100/g_cnt,2))
+##            print(f'whiteList count={len(_close)}')
         
 
 def ZT_success_rate_all_stock():
