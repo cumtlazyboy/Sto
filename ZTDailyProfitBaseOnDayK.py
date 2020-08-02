@@ -17,25 +17,6 @@ g_dirProfit = {}
 
 
 
-########
-##########queryDate = '20190102'
-########queryDate = '20200408'
-########downloadStartDate = '20140101'
-########downloadEndDate   = '20200430'
-########downloadStartDate = '20140101'
-########downloadEndDate   = '20200707'
-
-##
-##startDate = '20150101'
-##endDate   = '20151231'
-##
-##startDate = '20160101'
-##endDate   = '20161231'
-##
-##startDate = '20170101'
-##endDate   = '20171231'
-##
-##
 startDate = '20180101'
 endDate   = '20181231'
 ##
@@ -170,70 +151,22 @@ def ZT_calculate_profit(_stock_name):
             ave_close_profit = ave_close_profit + close_profit
             saveProfitToCsv(_stock_name,_date[i],close_profit)
             
-############    if ZTFailCnt + ZTSuccessCnt>5:
-############        if ZTSuccessCnt/(ZTFailCnt+ZTSuccessCnt) >0.7:
-############            g_cnt= g_cnt +1
-############            ZT_rate = round(ZTSuccessCnt/(ZTFailCnt+ZTSuccessCnt),3)
-############            if _stock_name[0:2] == '00' or _stock_name[0:2] == '30':
-############                stockName = _stock_name+'.SZ'
-############            elif _stock_name[0:2] == '60':
-############                stockName = _stock_name+'.SH'
-############                print (stockName)
-############            saveParaToCsv(stockName,ZT_rate,ave_close_profit)
-############            print(_stock_name,'封板成功率=',ZT_rate,'；触及涨停次数=',ZTFailCnt + ZTSuccessCnt, g_cnt,)
-############            print(_stock_name,'                                          次日开盘平均收益%=',round(ave_open_profit*100/g_cnt, 2), '次日收盘平均收益%=',round(ave_close_profit*100/g_cnt,2))
-##            print(f'whiteList count={len(_close)}')
-        
 
 
 
-##def ZT_profit_all_stock():
-##    print('开始遍历所有股票')
-##    print('startDate =',startDate, 'endDate = ',endDate)
-##    with open('C:/python/csv/oneDayAllStock.csv', 'r', encoding='utf-8') as f:
-##        reader = csv.DictReader(f)
-##        for row in reader:
-##            stock_name = row['ts_code'][:6]
-##            ZT_calculate_profit(stock_name)
-##    print('完成遍历所有股票')    
-
-
+STOCK_LIST = 'C:/python/zhangting/whitelist.csv'
+##STOCK_LIST = 'C:/python/csv/oneDayAllStock.csv'
 def ZT_profit_all_stock():
     print('开始遍历所有股票')
     print('startDate =',startDate, 'endDate = ',endDate)
-    with open('C:/python/zhangting/whitelist.csv', 'r', encoding='utf-8') as f:
+    with open(STOCK_LIST, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
             stock_name = row['ts_code'][:6]
-            ZT_calculate_profit(stock_name)
+            if stock_name[:2] == '00' or stock_name[:2] == '60' or stock_name[:2] == '30':
+##            if stock_name[:2] == '00' or stock_name[:2] == '60':
+                ZT_calculate_profit(stock_name)
     print('完成遍历所有股票')    
-
-
-
-##
-##def calculateProfit(fileName):
-##    global g_dirProfit
-##    g_dirProfit = {}
-##    dirtCount = {}
-##    dirtStockCode = {}
-##    with open(fileName, 'r', encoding='utf-8') as f:
-##        reader = csv.DictReader(f)
-##        for row in reader:
-##            date = row['date']
-##            value = row['profit']
-##            if date not in g_dirProfit:
-##                g_dirProfit[date] = float(value)
-##                dirtCount[date] = 1
-##            else:
-##                g_dirProfit[date] = g_dirProfit[date] + float(value)
-##                dirtCount[date] = dirtCount[date] + 1
-##            dirtStockCode[date] = dirtStockCode[date]+ row['ts_code']
-##
-##    g_dirProfit = dict(sorted(g_dirProfit.items(), key=lambda d: d[0], reverse=False))
-##    for k in g_dirProfit:
-##        g_dirProfit[k] = round(g_dirProfit[k] *100/ dirtCount[k], 4)
-##    print(g_dirProfit)
-##    print(dirtStockCode)
 
 
 
@@ -290,6 +223,8 @@ def drawProfitPic():
     averageProfit = round(totalProfit / len(y1), 2)
 ##    plt.title(str(len(y1)) + '天' + '平均收益率: ' + str(averageProfit))
     plt.title(str(len(y1)) + '天' + '平均收益率: ' + str(averageProfit) + ', 总收益: ' + str(g_totalProfit))
+##    print(g_dirProfit)
+    print (len(y1),'天， 平均收益率: ' ,averageProfit , ', 总收益: ' , g_totalProfit)
     plt.legend()
     plt.show()
 
@@ -316,11 +251,11 @@ def drawProfitPic():
 ##    plt.show()
 
     
-
+PROFIT_FILE = 'C:/python/zhangting/profit.csv'
 def main():
-    deleteCsvFile('C:/python/zhangting/profit.csv')
+    deleteCsvFile(PROFIT_FILE)
     ZT_profit_all_stock()
-    calculateProfit('C:/python/zhangting/profit.csv')
+    calculateProfit(PROFIT_FILE)
     drawProfitPic()
     
 if __name__ == '__main__':
