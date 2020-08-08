@@ -30,7 +30,8 @@ endDate   = '20181231'
 ##
 startDate = '20160101'
 endDate   = '20191231'
-
+startDate = '20200601'
+endDate   = '20201231'
 
 def string_to_float(str):
     return float(str)
@@ -161,8 +162,8 @@ def ZT_success_rate(_stock_name):
 ##############        elif ZTprice == _high[i] and ZTprice == _close[i]:
 ##############            ZTSuccessCnt = ZTSuccessCnt+1
 ################            print ('封板成功',_date[i])
-    if ZTFailCnt + ZTSuccessCnt>3:
-        if ZTSuccessCnt/(ZTFailCnt+ZTSuccessCnt) >0.6:
+    if ZTFailCnt + ZTSuccessCnt>1:
+        if ZTSuccessCnt/(ZTFailCnt+ZTSuccessCnt) >0.7:
             g_cnt= g_cnt +1
             ZT_rate = round(ZTSuccessCnt/(ZTFailCnt+ZTSuccessCnt),3)
             if _stock_name[0:2] == '00' or _stock_name[0:2] == '30':
@@ -183,7 +184,8 @@ def ZT_success_rate_all_stock():
         reader = csv.DictReader(f)
         for row in reader:
             stock_name = row['ts_code'][:6]
-            ZT_success_rate(stock_name)
+            if stock_name[:2] == '00' or stock_name[:2] == '60':
+                ZT_success_rate(stock_name)
     print('完成遍历所有股票')    
 
 def main():    
