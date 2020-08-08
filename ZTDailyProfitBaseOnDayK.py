@@ -22,8 +22,8 @@ endDate   = '20181231'
 ##
 startDate = '20160101'
 endDate   = '20191231'
-startDate = '20200629'
-endDate   = '20200707'
+startDate = '20200626'
+endDate   = '20200731'
 
 def string_to_float(str):
     return float(str)
@@ -112,7 +112,8 @@ kdj_stock_num = '601688.SH'
 #首板成功率
 g_cnt = 0
 
-def ZT_calculate_profit(_stock_name):
+##计算首板的收益
+def first_ZT_calculate_profit(_stock_name):
     ZTprice = 0
     ZTSuccessCnt = 0
     ZTFailCnt = 0
@@ -137,36 +138,66 @@ def ZT_calculate_profit(_stock_name):
         ZTprice = calculateHighestPrice(_close[i-1])
         if ZTprice == _open[i]:  #开盘涨停就跳过
             continue
-        if ZTprice == _high[i] and ZTPredayPrice > _close[i-1]:  #首板，当天最高价为涨停价，前一天收盘不能为涨停
+        if ZTprice == _high[i] and ZTPredayPrice > _close[i-1]:  #首板，当天最高价为涨停价，前一天收盘不能为涨停。封板成功和失败的情况都考虑
+##        if ZTprice == _high[i] and ZTprice > _close[i]and ZTPredayPrice > _close[i-1]:  #首板，只算没封成功的情况
+##        if ZTprice == _close[i] and ZTPredayPrice > _close[i-1]:  #首板，当天最高价为涨停价，前一天收盘不能为涨停。只算封板成功的情况
             if ZTprice > _close[i]:
                 ZTFailCnt = ZTFailCnt+1
-####                print ('封板失败',_date[i])
+####                print (_stock_name,'封板失败',_date[i])
             elif ZTprice == _close[i]:
                 ZTSuccessCnt = ZTSuccessCnt+1
-####                print ('封板成功',_date[i])              
+####                print (_stock_name,'封板成功',_date[i])              
             open_profit = round(_open[i+1]/ ZTprice - 1,2)
             close_profit= round(_close[i+1]/ ZTprice -1,2)
-##            print (open_profit, close_profit)
+            
             ave_open_profit = ave_open_profit + open_profit
             ave_close_profit = ave_close_profit + close_profit
-            saveProfitToCsv(_stock_name,_date[i],close_profit)
-            
+            saveProfitToCsv(_stock_name,_date[i],open_profit)
+##            saveProfitToCsv(_stock_name,_date[i],close_profit)
+      
+##计算二板的收益
+def second_ZT_calculate_profit(_stock_name):
+    ZTprice = 0
+    ZTSuccessCnt = 0
+    ZTFailCnt = 0
+    ZTSuccessCnt = 0
+    ZT_rate = 0
+    open_profit = 0  #以涨停次日开盘价计算收益
+    close_profit = 0  #以涨停次日收盘价计算收益
+    ave_open_profit = 0  #以涨停次日开盘价计算的  平均收益
+    ave_close_profit = 0  #以涨停次日收盘价计算的  平均收益
+    stockName = 0
+    global g_cnt
+    _date=[];_open=[];_high=[];_low=[];_close=[];_volume=[];  #define data
+    read_csv_file(_stock_name,_date,_open,_high,_low,_close,_volume)
+    length = len(_close)
+    if length== 0:
+        return
+####    if _stock_name != '000698':    #debug  计算某一只票
+####        return
+    
+    for i in range(3, length-1):
+        ZTPre2dayPrice = calculateHighestPrice(_close[i-3])  #涨停前2天的假定涨停价
+        ZTPredayPrice = calculateHighestPrice(_close[i-2])  #涨停前一天的假定涨停价
+        ZTprice = calculateHighestPrice(_close[i-1])
+        if ZTprice == _open[i]:  #开盘涨停就跳过
+            continue
+        if ZTprice == _high[i] and ZTPredayPrice == _close[i-1] and ZTPre2dayPrice >_close[i-2]:  #二板，当天和前一天最高价为涨停价，前2天收盘不能为涨停。封板成功和失败的情况都考虑
+##        if ZTprice == _close[i] and ZTPredayPrice == _close[i-1] and ZTPre2dayPrice >_close[i-2]:  #二板，当天和前一天最高价为涨停价，前2天收盘不能为涨停。只算封板成功的情况
+            if ZTprice > _close[i]:
+                ZTFailCnt = ZTFailCnt+1
+##                print (_stock_name,'封板失败',_date[i])
+            elif ZTprice == _close[i]:
+                ZTSuccessCnt = ZTSuccessCnt+1
+##                print (_stock_name, '封板成功',_date[i])              
+            open_profit = round(_open[i+1]/ ZTprice - 1,2)
+            close_profit= round(_close[i+1]/ ZTprice -1,2)
 
+            ave_open_profit = ave_open_profit + open_profit
+            ave_close_profit = ave_close_profit + close_profit
+            saveProfitToCsv(_stock_name,_date[i],open_profit)
+##            saveProfitToCsv(_stock_name,_date[i],close_profit)
 
-
-STOCK_LIST = 'C:/python/zhangting/whitelist.csv'
-##STOCK_LIST = 'C:/python/csv/oneDayAllStock.csv'
-def ZT_profit_all_stock():
-    print('开始遍历所有股票')
-    print('startDate =',startDate, 'endDate = ',endDate)
-    with open(STOCK_LIST, 'r', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            stock_name = row['ts_code'][:6]
-            if stock_name[:2] == '00' or stock_name[:2] == '60' or stock_name[:2] == '30':
-##            if stock_name[:2] == '00' or stock_name[:2] == '60':
-                ZT_calculate_profit(stock_name)
-    print('完成遍历所有股票')    
 
 
 
@@ -250,7 +281,25 @@ def drawProfitPic():
 ##    plt.legend()
 ##    plt.show()
 
-    
+
+
+STOCK_LIST = 'C:/python/zhangting/whitelist.csv'
+STOCK_LIST = 'C:/python/csv/oneDayAllStock.csv'
+def ZT_profit_all_stock():
+    print('开始遍历所有股票')
+    print('startDate =',startDate, 'endDate = ',endDate)
+    with open(STOCK_LIST, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            stock_name = row['ts_code'][:6]
+##            if stock_name[:2] == '00' or stock_name[:2] == '60' or stock_name[:2] == '30':
+            if stock_name[:2] == '00' or stock_name[:2] == '60':
+                first_ZT_calculate_profit(stock_name)
+##                second_ZT_calculate_profit(stock_name)
+    print('完成遍历所有股票')    
+
+
+
 PROFIT_FILE = 'C:/python/zhangting/profit.csv'
 def main():
     deleteCsvFile(PROFIT_FILE)
