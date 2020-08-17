@@ -13,7 +13,7 @@ downloadStartDate = '20140101'
 downloadEndDate   = '20200720'
 
 downloadStartDate = '20200601'
-downloadEndDate   = '20200807'
+downloadEndDate   = '20200831'
 
 ##
 ##startDate = '20150101'
@@ -94,9 +94,129 @@ def saveOneDayAllCsv():
     print('开始保存所有股票信息......')
     pro = ts.pro_api()
     df = pro.query('daily_basic', ts_code='', trade_date=queryDate,fields='ts_code,pe,pb,total_share,float_share')
+######    print(df)
+######    ts_code = df['ts_code'][1]
+######    print(ts_code)
     df.to_csv('C:/python/csv/oneDayAllStock.csv')
     print('完成保存所有股票信息')
 
+
+###读取某天交易的所有股票信息
+##def getAllStockName():
+##    print('开始保存所有股票信息......')
+##    stock_string = ''
+##    cnt = 0
+##    pro = ts.pro_api()
+##    df = pro.query('daily_basic', ts_code='', trade_date=queryDate,fields='ts_code,pe,pb,total_share,float_share')
+##    ts_code = df['ts_code'][1]
+##    print(ts_code)
+##    length = len(df['ts_code'])
+##    print (length)
+####    for i in range(900):
+##    for i in range(length):
+##        ts_code = df['ts_code'][i]
+##        if ts_code[:2] == '60':
+##            stock_string = stock_string +'s_sh' + ts_code[:6] + ','
+##            cnt = cnt+1
+##        elif ts_code[:2] == '00':
+##            stock_string = stock_string +'s_sz' + ts_code[:6] + ','
+##            cnt = cnt+1
+##    stock_string = 'http://hq.sinajs.cn/list=' + stock_string
+##    print (cnt)
+##    print (stock_string)
+##        
+####    df.to_csv('C:/python/csv/oneDayAllStock.csv')
+##    print('完成保存所有股票信息')
+    
+
+
+##读取某天交易的所有股票信息
+def getAllStockName():
+    print('开始保存所有股票信息......')
+    THREADHOLD = 600
+    str_tmp = ''
+    stock_string1 = ''
+    stock_string2 = ''
+    stock_string3 = ''
+    stock_string4 = ''
+    stock_string5 = ''
+    cnt = 0
+    pro = ts.pro_api()
+    df = pro.query('daily_basic', ts_code='', trade_date=queryDate,fields='ts_code,pe,pb,total_share,float_share')
+##    ts_code = df['ts_code'][1]
+##    print(ts_code)
+    length = len(df['ts_code'])
+    print ('length all = ',length)
+##    for i in range(900):
+    for i in range(length):
+        ts_code = df['ts_code'][i]
+        if ts_code[:2] == '60':
+            str_tmp = str_tmp +'sh' + ts_code[:6] + ','
+            cnt = cnt+1
+        elif ts_code[:2] == '00':
+            str_tmp = str_tmp +'sz' + ts_code[:6] + ','
+            cnt = cnt+1
+            
+        if cnt==THREADHOLD:
+            stock_string1 = 'http://hq.sinajs.cn/list=' + str_tmp
+            str_tmp = ''
+        elif cnt==THREADHOLD*2:
+            stock_string2 = 'http://hq.sinajs.cn/list=' + str_tmp
+            str_tmp = ''
+        elif cnt==THREADHOLD*3:
+            stock_string3 = 'http://hq.sinajs.cn/list=' + str_tmp
+            str_tmp = ''
+        elif cnt==THREADHOLD*4:
+            stock_string4 = 'http://hq.sinajs.cn/list=' + str_tmp
+            str_tmp = ''
+##        elif cnt==THREADHOLD*5:
+##            stock_string5 = 'http://hq.sinajs.cn/list=' + str_tmp
+##            str_tmp = ''
+    stock_string5 = 'http://hq.sinajs.cn/list=' + str_tmp
+    print (cnt)
+    print (stock_string1)
+    print (stock_string2)
+    print (stock_string3)
+    print (stock_string4)
+    print (stock_string5)
+##    df.to_csv('C:/python/csv/oneDayAllStock.csv')
+    print('完成保存所有股票信息')
+    
+###########读取某天交易的所有股票信息
+##########def getAllStockName():
+##########    print('开始保存所有股票信息......')
+##########    str_tmp = ''
+##########    stock_string = []
+##########    cnt = 0
+##########    j = 0
+##########    pro = ts.pro_api()
+##########    df = pro.query('daily_basic', ts_code='', trade_date=queryDate,fields='ts_code,pe,pb,total_share,float_share')
+##########    ts_code = df['ts_code'][1]
+##########    print(ts_code)
+##########    length = len(df['ts_code'])
+##########    print (length)
+############    for i in range(900):
+##########    for i in range(length):
+##########        ts_code = df['ts_code'][i]
+##########        if ts_code[:2] == '60':
+##########            str_tmp = str_tmp +'s_sh' + ts_code[:6] + ','
+##########            cnt = cnt+1
+##########        elif ts_code[:2] == '00':
+##########            str_tmp = str_tmp +'s_sz' + ts_code[:6] + ','
+##########            cnt = cnt+1
+##########        if cnt>600:
+##########            stock_string[j] = 'http://hq.sinajs.cn/list=' + str_tmp
+##########            j = j +1
+##########            cnt = 0
+##########            str_tmp = ''
+##########    stock_string = 'http://hq.sinajs.cn/list=' + str_tmp
+##########    print (cnt)
+##########    print (stock_string)
+##########        
+############    df.to_csv('C:/python/csv/oneDayAllStock.csv')
+##########    print('完成保存所有股票信息')
+
+    
 #指定某个日期查询PB
 def getPB(_date, _stock_num):
     pro = ts.pro_api()
@@ -212,7 +332,7 @@ def main():
     saveTotalShareBelow5ToEachFile(_freq) #只调用一次即可，参数为日线，周线，月线
     
     
-
+##    getAllStockName();
 
 if __name__ == '__main__':
     print('开始请求数据')
